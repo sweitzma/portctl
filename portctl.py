@@ -216,7 +216,7 @@ def ls(cols):
 
     # choose columns to show based on optional arguments
     if len(cols) == 0:
-        cols = ["id", "host", "mapping", "time"]  # default columns
+        cols = ["id", "host", "mapping", "time", "desc"]  # default columns
     else:
         valid_cols = list(set(cols) & set(columns.keys()))
         cols = sorted(valid_cols, key=lambda c: cols.index(c))
