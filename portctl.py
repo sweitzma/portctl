@@ -284,6 +284,25 @@ def new(host, host_ip, host_port, local_ip, local_port, desc):
     pf.open()
 
 
+@cli.command()
+@click.argument("ids", nargs=-1, required=True)
+def link(ids):
+    pfs = sqlite_entries()
+    id_to_pf = {pf.id: pf for pf in pfs}
+    existing_ids = id_to_pf.keys()
+
+    for id in ids:
+        n = len(id)
+        match = [eid for eid in existing_ids if eid[:n] == id]
+        if len(match) == 0:
+            print("no process for id", id)
+        elif len(match) > 1:
+            print("no unuqie match for id", id)
+        else:
+            pf = id_to_pf[match[0]]
+            print(f"http://{pf.local_ip}:{pf.local_port}")
+
+
 if __name__ == "__main__":
     ensure_table_exists()
     update_entries()
