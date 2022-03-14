@@ -287,6 +287,9 @@ def new(host, host_ip, host_port, local_ip, local_port, desc):
 @cli.command()
 @click.argument("ids", nargs=-1, required=True)
 def link(ids):
+    """
+    Print out local http url associated with the port forward
+    """
     pfs = sqlite_entries()
     id_to_pf = {pf.id: pf for pf in pfs}
     existing_ids = id_to_pf.keys()
