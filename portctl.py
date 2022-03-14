@@ -44,10 +44,6 @@ class PortForward:
             host, remote_ip, int(remote_port), local_ip, int(local_port), int(pid)
         )
 
-    @classmethod
-    def from_sqlite_ouput(cls, output: str):
-        pass
-
     def to_sql_insert(self):
         lookup = asdict(self)
         values = []
@@ -309,4 +305,4 @@ def link(ids):
 if __name__ == "__main__":
     ensure_table_exists()
     update_entries()
-    cli()
+    cli(prog_name='portctl')
