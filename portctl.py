@@ -5,6 +5,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import time
 from typing import Optional
+import yaml
+from pathlib import Path
+import os
 
 import click
 
@@ -21,6 +24,12 @@ SCHEMA = {
     "description": "text",
 }
 
+CONFIG_FILE = Path(os.getenv("HOME")) / ".config/portctl/config.yml"
+with open(CONFIG_FILE) as f:
+    CONFIG = yaml.load(f, Loader=yaml.FullLoader)
+
+DEFAULT_HOST = CONFIG["default_host"]
+
 
 @dataclass
 class PortForward:
@@ -29,9 +38,10 @@ class PortForward:
     remote_port: int
     local_ip: str
     local_port: int
-    pid: int
+    pid: Optional[int] = None
     start_time: Optional[int] = None
     description: Optional[str] = None
+    name: Optional[str] = None
 
     @classmethod
     def from_ps_aux_output(cls, output: str):
@@ -194,7 +204,7 @@ def ls(cols):
 
     # format: { id: [<title>, <row val fn>, <formatting>] }
     columns = {
-        "id": ["ID", lambda pf: pf.id[:4], "{:8}"],
+        "id": ["ID", lambda pf: pf.id[:6], "{:8}"],
         "pid": ["PID", lambda pf: str(pf.pid), "{:8}"],
         "host": ["HOST", lambda pf: pf.remote_host, "{:8}"],
         "mapping": [
@@ -208,11 +218,12 @@ def ls(cols):
             "{:8}",
         ],
         "desc": ["DESC", lambda pf: pf.description, "{}"],
+        "name": ["NAME", lambda pf: pf.name or "-", "{:8}"],
     }
 
     # choose columns to show based on optional arguments
     if len(cols) == 0:
-        cols = ["id", "host", "mapping", "time", "desc"]  # default columns
+        cols = ["id", "host", "mapping", "time",  "name", "desc"]  # default columns
     else:
         valid_cols = list(set(cols) & set(columns.keys()))
         cols = sorted(valid_cols, key=lambda c: cols.index(c))
@@ -253,7 +264,23 @@ def kill(ids, all):
 
 
 @cli.command()
-@click.option("--host", default="fjord", help="remote host, default=fjord")
+@click.argument("name", nargs=1)
+def open_preset(name):
+    """
+    Open a preset port forwarding config as specified in the config file.
+    """
+    if name not in PRESETS:
+        print(f"Error, preset {name} not found. Valid names are: {list(PRESETS.keys())}")
+        return
+
+    pf = PRESETS[name]
+    pf.start_time = int(time())
+    pf.unsafe_insert()
+    pf.open()
+
+
+@cli.command()
+@click.option("--host", default=DEFAULT_HOST, help="remote host, default=fjord")
 @click.option("--host-ip", default="localhost", help="remote ip, default=localhost")
 @click.argument("host-port", type=int, required=True)
 @click.option("--local-ip", default="localhost", help="local ip, default=localhost")
@@ -303,6 +330,7 @@ def link(ids):
 
 
 if __name__ == "__main__":
+    PRESETS = { preset['name']: PortForward(**preset) for preset in CONFIG['presets'] }
     ensure_table_exists()
     update_entries()
     cli(prog_name='portctl')

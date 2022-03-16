@@ -3,7 +3,7 @@ This is a CLI utility that helps me manage my port forwarding over SSH.
 
 ### Requirements
 * `python3`
-* python packages: `click`
+* python packages: `click`, `pyyaml`
 * `sqlite3`
 
 ## Usage
@@ -40,3 +40,24 @@ ID      HOST    MAPPING         TIME
 
 As you can see, `portctl` provides a convenient way to create, monitor, and kill
 SSH port forwarding.
+
+## Config file
+`portctl` uses a config file located at `~/.config/portctl/config.yml` to
+provide some defaults.
+
+This is an example config file
+```yml
+# set the default host
+default_host: fjord
+
+# set some preset port forwards that can be referenced by name, note
+# that all of these fields are required
+presets:
+  - name: data_lab
+    description: "Jupyter Lab for data collection"
+    local_ip: localhost
+    local_port: 8888
+    remote_host: fjord
+    remote_ip: localhost
+    remote_port: 8888
+```
